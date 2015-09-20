@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <title>collapsingNav</title>
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1" />
-    <link href="dest/css/styles.css" rel="stylesheet" type="text/css" />
+    <link href="src/css/styles.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body>
     <main>
         <div class="wrap">
             <nav>
-                <a href="#" class="js-collapsed-link">Reveal Nav</span>
+                <a href="#" class="js-collapsed-link">Reveal Nav</a>
                 <div class="nav-primary">
                     <a href="#">Home</a>
                     <a href="#">About</a>
@@ -20,12 +20,13 @@
                     <a href="#">Contact</a>
                     <a href="#" class="js-more">More</a>
                 </div>
-                <div class="nav-overflow"></div>
+                <div class="nav-overflow js-nav-overflow"></div>
             </nav>
         </div>
     </main>
-    <script type="text/javascript" src="dest/js/collapsingNav.min.js"></script>
+    <script type="text/javascript" src="src/js/collapsingNav.js"></script>
     <script>
+        new collapsingNav();
     </script>
 </body>
 </html>

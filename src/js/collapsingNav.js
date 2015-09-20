@@ -1,12 +1,14 @@
+'use strict';
+
 class collapsingNav {
 
-    constructor({navParent, navPrimary, navOverflow, moreLink, collapsedLink, breakpoint} = {}) {
-        this.navParent = navParent ? "nav" : navParent;
-        this.navPrimary = navPrimary ? ".navPrimary" : navPrimary;
-        this.navOverflow = navOverflow ? ".navOverflow" : navOverflow;
-        this.moreLink = moreLink ? ".js-more" : moreLink;
-        this.collapsedLink = collapsedLink ? ".js-collapsed-link" : overflowLink;
-        this.breakpoint = breakpoint ? "(min-width: 480px)" : breakpoint;
+    constructor(navParent, navPrimary, navOverflow, moreLink, collapsedLink, breakpoint) {
+        this.navParent = navParent || "nav";
+        this.navPrimary = navPrimary || ".nav-primary";
+        this.navOverflow = navOverflow || ".js-nav-overflow";
+        this.moreLink = moreLink || ".js-more";
+        this.collapsedLink = collapsedLink || ".js-collapsed-link";
+        this.breakpoint = breakpoint || "(min-width: 480px)";
         this.moreLinkText = this.moreLink.replace(/^./, '');
 
         this.setNavValues();
@@ -26,9 +28,10 @@ class collapsingNav {
             calculateSize = 0;
 
         Array.prototype.forEach.call(links, (e, i) => {
-            calculateSize += outerWidth(e);
+            calculateSize += this.outerWidth(e);
             e.setAttribute('data-right-edge', calculateSize);
             e.setAttribute('data-nav-index', i);
+            e.setAttribute('data-width', this.outerWidth(e));
         });
     }
 
@@ -67,10 +70,10 @@ class collapsingNav {
     }
 
     handleMoreEvent() {
-        toggleClass(document.querySelector(this.navParent), 'show-nav');
+        this.toggleClass(document.querySelector(this.navParent), 'show-nav');
     }
 
-    setClickHandlers: function() {
+    setClickHandlers() {
         document.querySelector(this.moreLink).addEventListener('click', this.handleMoreEvent.bind(this), false);
         document.querySelector(this.collapsedLink).addEventListener('click', this.handleMoreEvent.bind(this), false);
     }
@@ -81,9 +84,10 @@ class collapsingNav {
 
         let mediaQueryResponse = (mql) => {
             // Remove children nodes to re-calculate
+
             this.removeChildren([
-                this.options.navPrimary,
-                this.options.navOverflow
+                this.navPrimary,
+                this.navOverflow
             ]);
 
             // If the media query matches
@@ -102,19 +106,21 @@ class collapsingNav {
     }
 
     collapseResponsive() {
-        var navWidth = outerWidth(document.querySelector(this.navPrimary)),
-            moreWidth = outerWidth(document.querySelector(this.navItems[this.navItems.length - 1]));
+        let navWidth = this.outerWidth(document.querySelector(this.navPrimary)),
+            moreWidth = this.outerWidth(this.navItems[this.navItems.length - 1]),
+            overflowNavPosition = 0;
 
-        for (var i = 0; i < this.navItems.length; i++) {
-            var navItem = this.navItems[i],
+        for (let i = 0; i < this.navItems.length; i++) {
+            let navItem = this.navItems[i],
                 rightEdge = navItem.getAttribute('data-right-edge'),
                 totalWidth = parseInt(rightEdge) + moreWidth;
 
-            if (hasClass(this.navItems[i], this.moreLinkText)) continue;
+            if (this.hasClass(navItem, this.moreLinkText)) continue;
 
             // Check if navItem fits in primary nav. If not, move to overflow navigation.
-            if (totalWidth < navWidth) {
+            if (totalWidth <= navWidth) {
                 document.querySelector(this.navPrimary).insertBefore(navItem, document.querySelector(this.moreLink));
+                overflowNavPosition += parseInt(navItem.getAttribute('data-width'));
             } else {
                 document.querySelector(this.navOverflow).appendChild(navItem);
             }
@@ -122,47 +128,54 @@ class collapsingNav {
 
         // Add menu overflow class
         if (document.querySelector('.nav-overflow a')) {
-            addClass(document.querySelector(this.navParent), 'menu-overflow');
+            this.addClass(document.querySelector(this.navParent), 'menu-overflow');
         } else {
-            removeClass(document.querySelector(this.navParent), 'menu-overflow');
+            this.removeClass(document.querySelector(this.navParent), 'menu-overflow');
         }
+
+        // Position overflow nav left to align under "more"
+        document.querySelector(this.navOverflow).style.left = `${overflowNavPosition}px`;
     }
 
     // Collapse all navigation items
     collapseAllItems() {
+
+        // Remove inline style on nav overflow
+        document.querySelector(this.navOverflow).removeAttribute('style')
+
         // Remove show-nav and menu-overflow classes
-        removeClass(document.querySelector(this.navParent), 'menu-overflow');
-        removeClass(document.querySelector(this.navParent), 'show-nav');
+        this.removeClass(document.querySelector(this.navParent), 'menu-overflow');
+        this.removeClass(document.querySelector(this.navParent), 'show-nav');
 
         // Re-apply sorted elements
-        for (var i = 0; i < this.navItems.length; i++) {
-            if (!hasClass(this.navItems[i], this.moreLinkText)) {
+        for (let i = 0; i < this.navItems.length; i++) {
+            if (!this.hasClass(this.navItems[i], this.moreLinkText)) {
                 document.querySelector(this.navOverflow).appendChild(this.navItems[i]);
             }
         }
 
-        removeClass(document.querySelector(this.navParent), 'menu-overflow');
+        this.removeClass(document.querySelector(this.navParent), 'menu-overflow');
     }
 
     /* Helper functions */
     outerWidth(el) {
-        var width = el.offsetWidth;
-        var style = getComputedStyle(el);
+        let width = el.offsetWidth,
+            style = getComputedStyle(el);
 
         width += parseInt(style.marginLeft) + parseInt(style.marginRight);
         return width;
     }
 
     outerHeight(el) {
-        var height = el.offsetHeight;
-        var style = getComputedStyle(el);
+        let height = el.offsetHeight,
+            style = getComputedStyle(el);
 
         height += parseInt(style.marginTop) + parseInt(style.marginBottom);
         return height;
     }
 
     hasClass(el, className) {
-        var classExists;
+        let classExists;
 
         if (el.classList) {
             classExists = el.classList.contains(className);
@@ -193,8 +206,8 @@ class collapsingNav {
         if (el.classList) {
             el.classList.toggle(className);
         } else {
-            var classes = el.className.split(' ');
-            var existingIndex = classes.indexOf(className);
+            let classes = el.className.split(' ');
+            let existingIndex = classes.indexOf(className);
 
             if (existingIndex >= 0)
                 classes.splice(existingIndex, 1);
